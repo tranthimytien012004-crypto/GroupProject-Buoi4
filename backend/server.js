@@ -1,25 +1,19 @@
+// server.js
+const express = require('express');
+const app = express();
 require('dotenv').config();
 
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-console.log("MONGO_URI =", process.env.MONGO_URI);
-
-app.use(cors());
+// Middleware để xử lý JSON
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
+//Gán route user 
+const userRoutes = require('./routes/user');
+app.use('/', userRoutes);
 
+// Cổng chạy server
+const PORT = process.env.PORT || 3000;
 
-
-app.get("/", (req, res) => {
-  res.send("Backend server is running!");
-});
-
+// Khởi động server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });

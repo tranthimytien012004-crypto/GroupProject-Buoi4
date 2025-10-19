@@ -14,7 +14,7 @@
   - Tạo giao diện trang chủ
   - Kết nối API backend
 
-##  Thành viên 3: [Lê Trung Kiên]
+##  Thành viên 3: [Lê Trung Kên]
 - Vai trò: Viết tài liệu & quản lý GitHub
 - Nhiệm vụ:
   - Tạo README nhóm
