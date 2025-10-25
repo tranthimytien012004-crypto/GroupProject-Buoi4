@@ -1,3 +1,4 @@
+
 # Node modules
 node_modules/
 
@@ -11,3 +12,6 @@ logs/
 # Optional build folders
 dist/
 build/
+
+node_modules/
+
