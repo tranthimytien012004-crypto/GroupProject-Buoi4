@@ -1,8 +1,7 @@
-// Code từ frontend
+// Hợp nhất code frontend và backend
 import React, { useState } from "react";
 import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
-
 function App() {
   const [refresh, setRefresh] = useState(false);
 
