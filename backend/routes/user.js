@@ -4,17 +4,9 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 // ✅ Các route CRUD người dùng
-
-// Lấy danh sách tất cả user
-router.get("/users", userController.getUsers);
-
-// Thêm user mới
-router.post("/users", userController.addUser);
-
-// Cập nhật user theo ID
-router.put("/users/:id", userController.updateUser);
-
-// Xóa user theo ID
-router.delete("/users/:id", userController.deleteUser);
+router.get("/", userController.getUsers);        // Lấy danh sách user
+router.post("/", userController.addUser);        // Thêm user
+router.put("/:id", userController.updateUser);   // Cập nhật user
+router.delete("/:id", userController.deleteUser); // Xóa user
 
 module.exports = router;
