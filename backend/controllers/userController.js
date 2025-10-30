@@ -54,3 +54,77 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: "Không thể xóa user" });
   }
 };
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// Tạo JWT token
+const createToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
+
+// Đăng ký
+exports.signup = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Kiểm tra email trùng
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: 'Email đã tồn tại' });
+
+    // Mã hóa mật khẩu
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    res.status(201).json({
+      message: 'Đăng ký thành công!',
+      user: { id: newUser._id, name: newUser.name, email: newUser.email }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
+// Đăng nhập
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Tìm user theo email
+    const user = await User.findOne({ email }).select('+password');
+    if (!user)
+      return res.status(400).json({ message: 'Email không tồn tại' });
+
+    // So sánh mật khẩu
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: 'Sai mật khẩu' });
+
+    // Tạo JWT token
+    const token = createToken(user._id);
+
+    res.status(200).json({
+      message: 'Đăng nhập thành công!',
+      token,
+      user: { id: user._id, name: user.name, email: user.email }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
+// Đăng xuất
+exports.logout = async (req, res) => {
+  try {
+    // Client sẽ xóa token => server chỉ phản hồi ok
+    res.status(200).json({ message: 'Đăng xuất thành công!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
