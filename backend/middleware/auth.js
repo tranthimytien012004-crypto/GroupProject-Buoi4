@@ -1,20 +1,25 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
 
-// Middleware kiểm tra token JWT
 module.exports = function (req, res, next) {
   // Lấy token từ header Authorization
-  const token = req.header('Authorization')?.split(' ')[1]; // "Bearer <token>"
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
 
   if (!token) {
     return res.status(401).json({ message: 'Không có token, truy cập bị từ chối' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // secret từ .env
-    req.user = decoded.user; // lưu thông tin user từ token
-    next(); // chuyển tiếp sang route
+    // Xác thực token bằng secret trong .env
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Lưu thông tin user đã decode vào request để các route khác dùng
+    req.user = decoded;
+
+    next(); // Cho phép đi tiếp tới route tiếp theo
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ message: 'Token không hợp lệ' });
+    console.error('❌ Lỗi xác thực token:', err.message);
+    return res.status(403).json({ message: 'Token không hợp lệ hoặc đã hết hạn' });
   }
 };
