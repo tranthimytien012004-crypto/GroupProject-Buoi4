@@ -1,101 +1,107 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import "./UserList.css";
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
-  const [editingUser, setEditingUser] = useState(null);
-  const [form, setForm] = useState({ name: "", email: "" });
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
 
-  
-  // Lấy danh sách người dùng từ API
-  const fetchUsers = async () => {
+  // 🟦 Hàm tải danh sách người dùng
+  const fetchUsers = useCallback(async () => {
     try {
-      const response = await axios.get("https://reimagined-spork-r46qwxqgvx5jhx5wj-5000.app.github.dev/api/users");
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách:", error);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error("❌ Lỗi khi tải danh sách user:", err);
+      alert("Không thể tải danh sách người dùng!");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  // 🟦 Hàm xoá người dùng
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xoá người dùng này không?")) return;
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("🗑️ Xoá thành công!");
+      fetchUsers(); // Cập nhật lại danh sách
+    } catch (err) {
+      console.error("❌ Lỗi khi xoá user:", err);
+      alert("Không thể xoá người dùng!");
     }
   };
 
+  // 🟦 Gọi API khi component mount
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  // Xóa người dùng
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`https://reimagined-spork-r46qwxqgvx5jhx5wj-5000.app.github.dev/api/users/${id}`);
-      setUsers(users.filter((user) => user._id !== id));
-      alert("Xóa thành công!");
-    } catch (error) {
-      console.error(error);
-      alert("Xóa thất bại!");
-    }
-  };
-
-  // Chọn người dùng để sửa
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setForm({ name: user.name, email: user.email });
-  };
-
-  // Cập nhật người dùng
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.put(
-        `https://reimagined-spork-r46qwxqgvx5jhx5wj-5000.app.github.dev/api/users/${editingUser._id}`,
-        form
-      );
-      setUsers(users.map((user) => (user._id === editingUser._id ? res.data : user)));
-      setEditingUser(null);
-      setForm({ name: "", email: "" });
-      alert("Cập nhật thành công!");
-    } catch (error) {
-      console.error(error);
-      alert("Cập nhật thất bại!");
-    }
-  };
+  if (loading) return <p>Đang tải danh sách người dùng...</p>;
 
   return (
-    <div className="p-4">
-      <h2>Danh sách người dùng</h2>
+    <div className="user-list-container">
+      <h2>📘 Quản lý người dùng</h2>
+      <p>
+        👋 Xin chào, <strong>Admin!</strong>
+      </p>
+      <p>Cập nhật lần cuối: {new Date().toLocaleString()}</p>
 
-      <ul>
-        {users.map((user) => (
-          <li key={user._id} className="mb-2">
-            {user.name} - {user.email} &nbsp;
-            <button onClick={() => handleEdit(user)} className="mr-2">Sửa</button>
-            <button onClick={() => handleDelete(user._id)}>Xóa</button>
-          </li>
-        ))}
-      </ul>
-
-      {editingUser && (
-        <div className="mt-4">
-          <h3>Chỉnh sửa người dùng</h3>
-          <form onSubmit={handleUpdate}>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Tên"
-              className="mr-2"
-            />
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="Email"
-              className="mr-2"
-            />
-            <button type="submit">Cập nhật</button>
-            <button type="button" onClick={() => setEditingUser(null)} className="ml-2">
-              Hủy
-            </button>
-          </form>
-        </div>
-      )}
+      <table className="user-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Họ và tên</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.length > 0 ? (
+            users.map((user, index) => (
+              <tr key={user._id}>
+                <td>{index + 1}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>
+                  {user.role === "admin" ? (
+                    <span className="role-admin">Admin</span>
+                  ) : (
+                    <span className="role-user">User</span>
+                  )}
+                </td>
+                <td>
+                  {user.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString()
+                    : "Invalid Date"}
+                </td>
+                <td>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(user._id)}
+                  >
+                    🗑️ Xóa
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" style={{ textAlign: "center" }}>
+                Không có người dùng nào.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
