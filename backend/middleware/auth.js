@@ -1,20 +1,30 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-// Middleware kiểm tra token JWT
-module.exports = function (req, res, next) {
-  // Lấy token từ header Authorization
-  const token = req.header('Authorization')?.split(' ')[1]; // "Bearer <token>"
-
-  if (!token) {
-    return res.status(401).json({ message: 'Không có token, truy cập bị từ chối' });
-  }
-
+// ✅ Xác minh token
+exports.verifyToken = async (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // secret từ .env
-    req.user = decoded.user; // lưu thông tin user từ token
-    next(); // chuyển tiếp sang route
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ message: "Không có token!" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 🔒 Lưu cả id và role vào req.user
+    req.user = decoded;
+
+    next();
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ message: 'Token không hợp lệ' });
+    console.error("❌ verifyToken error:", err.message);
+    return res.status(403).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
   }
+};
+
+// ✅ Kiểm tra quyền admin
+exports.isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Bạn không có quyền admin!" });
+  }
+  next();
 };

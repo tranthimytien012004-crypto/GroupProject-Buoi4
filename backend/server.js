@@ -1,30 +1,47 @@
-// backend/server.js
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bcrypt = require("bcryptjs"); // <-- thêm dòng này
+require("dotenv").config();
 
-// Gọi các route
-const authRoutes = require('./routes/auth'); // đăng ký / đăng nhập
-const userRoutes = require('./routes/user'); // CRUD user (nếu có)
+const authRoutes = require("./routes/auth");
+const profileRoutes = require("./routes/profile");
+const userRoutes = require("./routes/user");
+const User = require("./models/User"); // <-- thêm dòng này
 
-dotenv.config();
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ✅ Kết nối MongoDB
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/users", userRoutes);
+
+// MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Đã kết nối MongoDB'))
-  .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
+  .then(async () => {
+    console.log("✅ Connected to MongoDB");
 
-// ✅ Định nghĩa route
-//app.use('/api/auth', authRoutes); // /signup, /login
-//app.use('/api/users', userRoutes); // /, /:id,...
+    // 🟢 Tạo tài khoản Admin mặc định (chỉ chạy 1 lần)
+    const adminEmail = "admin@gmail.com";
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash("123456", 10);
+      await User.create({
+        name: "Super Admin",
+        email: adminEmail,
+        password: hashedPassword,
+        role: "Admin", // hoặc "Admin" tùy bạn check trong middleware
+        createdAt: new Date(),
+      });
+      console.log("✅ Admin created: admin@gmail.com / 123456");
+    } else {
+      console.log("⚙️ Admin already exists");
+    }
 
-
-// ✅ Chạy server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`));
+    app.listen(process.env.PORT || 5000, () =>
+      console.log("🚀 Server running on port 5000")
+    );
+  })
+  .catch(err => console.error("❌ MongoDB Error:", err));
