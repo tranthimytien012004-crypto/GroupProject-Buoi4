@@ -14,6 +14,11 @@ const Profile = () => {
 
   const navigate = useNavigate();
 
+  // 🌐 Đặt URL API: tự nhận môi trường Codespace hoặc localhost
+  const BASE_URL =
+    process.env.REACT_APP_API_URL ||
+    "https://reimagined-spork-r46qwxqgvx5jhx5wj-5000.app.github.dev"; // 🟢 thay link backend Codespace của bạn
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -24,7 +29,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/profile`,
+        `${BASE_URL}/api/profile`,
         form,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -60,7 +65,7 @@ const Profile = () => {
         <Link to="/profile" style={{ color: "white", textDecoration: "none" }}>
           Profile
         </Link>
-        {user.role === "Admin" && (
+        {user.role?.toLowerCase() === "admin" && (
           <Link to="/admin" style={{ color: "white", textDecoration: "none" }}>
             Quản lý User
           </Link>
@@ -73,6 +78,7 @@ const Profile = () => {
             border: "none",
             padding: "5px 10px",
             cursor: "pointer",
+            marginLeft: "auto",
           }}
         >
           Đăng xuất

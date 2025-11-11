@@ -13,13 +13,16 @@ const PrivateRoute = ({ children, allowedRole }) => {
   // ❌ Nếu chưa đăng nhập
   if (!token || !user) {
     alert("⚠️ Bạn cần đăng nhập trước!");
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   // 🔒 Nếu route yêu cầu quyền admin mà user không phải admin
-  if (allowedRole === "admin" && user.role !== "admin") {
+  if (
+    allowedRole === "admin" &&
+    user.role?.toLowerCase() !== "admin"
+  ) {
     alert("⛔ Bạn không có quyền truy cập trang này!");
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   // ✅ Nếu hợp lệ → cho phép truy cập

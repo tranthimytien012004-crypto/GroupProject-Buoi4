@@ -20,7 +20,7 @@ export default function UploadAvatar() {
     setMsg("");
     setError("");
 
-    if (!file) return setError("Vui lòng chọn một ảnh trước khi tải lên!");
+    if (!file) return setError("⚠️ Vui lòng chọn một ảnh trước khi tải lên!");
 
     const formData = new FormData();
     formData.append("avatar", file);
@@ -28,7 +28,7 @@ export default function UploadAvatar() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/auth/upload-avatar`,
+        `${process.env.REACT_APP_API_URL || "https://reimagined-spork-r46qwxqgvx5jhx5wj-5000.app.github.dev"}/api/auth/upload-avatar`,
         formData,
         {
           headers: {
@@ -38,59 +38,120 @@ export default function UploadAvatar() {
         }
       );
 
-      setMsg(res.data.message || "Tải ảnh thành công!");
-      setPreview(res.data.avatar); // Cập nhật ảnh mới
+      setMsg(res.data.message || "✅ Upload avatar thành công!");
+      setPreview(res.data.avatar);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Tải ảnh thất bại!");
+      setError(err.response?.data?.message || "❌ Tải ảnh thất bại!");
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: 50 }}>
-      <h2>🖼️ Upload Avatar</h2>
+    <div
+      style={{
+        maxWidth: "500px",
+        margin: "50px auto",
+        background: "white",
+        borderRadius: "12px",
+        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+        padding: "30px",
+        textAlign: "center",
+      }}
+    >
+      <h2 style={{ color: "#007bff", marginBottom: "15px" }}>🖼️ Upload Avatar</h2>
 
-      <form onSubmit={handleUpload} style={{ display: "inline-block", marginTop: 20 }}>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ marginBottom: 10 }}
-        />
-        <br />
+      {msg && (
+        <div
+          style={{
+            background: "#d4edda",
+            color: "#155724",
+            padding: "10px",
+            borderRadius: "8px",
+            marginBottom: "10px",
+            fontWeight: "500",
+          }}
+        >
+          {msg}
+        </div>
+      )}
+
+      {error && (
+        <div
+          style={{
+            background: "#f8d7da",
+            color: "#721c24",
+            padding: "10px",
+            borderRadius: "8px",
+            marginBottom: "10px",
+            fontWeight: "500",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleUpload}>
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            htmlFor="fileInput"
+            style={{
+              display: "inline-block",
+              background: "#007bff",
+              color: "white",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: "500",
+              transition: "0.3s",
+            }}
+          >
+            📂 Chọn ảnh
+          </label>
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+        </div>
+
         {preview && (
           <img
             src={preview}
-            alt="Avatar Preview"
+            alt="Preview"
             style={{
-              width: 150,
-              height: 150,
+              width: 180,
+              height: 180,
               borderRadius: "50%",
               objectFit: "cover",
-              marginTop: 10,
-              border: "2px solid #007bff",
+              border: "4px solid #007bff",
+              marginBottom: "20px",
+              boxShadow: "0 0 10px rgba(0,0,0,0.15)",
             }}
           />
         )}
-        <br />
+
+        <p style={{ fontSize: "0.9rem", color: "gray" }}>
+          (Tối đa 10MB • JPG, PNG, GIF, WEBP)
+        </p>
+
         <button
           type="submit"
           style={{
-            padding: "8px 15px",
-            marginTop: 20,
-            background: "#007bff",
+            padding: "10px 20px",
+            background: "#28a745",
             color: "white",
             border: "none",
-            borderRadius: "5px",
+            borderRadius: "8px",
             cursor: "pointer",
+            fontWeight: "500",
+            transition: "0.3s",
           }}
         >
-          Tải lên
+          🚀 Tải lên
         </button>
       </form>
-
-      {msg && <p style={{ color: "green", marginTop: 15 }}>{msg}</p>}
-      {error && <p style={{ color: "red", marginTop: 15 }}>{error}</p>}
     </div>
   );
 }
